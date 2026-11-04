@@ -294,6 +294,16 @@ def agg_starter_bench(pg: pd.DataFrame) -> pd.DataFrame:
     return out.round(4)
 
 
+def partial_seasons(fact_games: pd.DataFrame) -> list[int]:
+    """Seasons whose regular season had not finished by the last date in the data.
+
+    The Kaggle snapshot ends mid-season (Dec 2022), so 2022-23 must not be compared
+    with full seasons. A season counts as complete once it has playoff games.
+    """
+    has_playoffs = set(fact_games.loc[fact_games["game_type"] == "Playoffs", "season"])
+    return sorted(int(s) for s in fact_games["season"].unique() if s not in has_playoffs)
+
+
 # --------------------------------------------------------------------------- indexes + reconciliation
 def create_indexes(engine) -> None:
     """W3: index the large fact tables on the columns used to filter/join."""
@@ -375,11 +385,19 @@ def run() -> None:
     write(engine, dim_team, "dim_team")
     write(engine, fact_games, "fact_games")
     write(engine, fact_pg, "fact_player_games")
-    write(engine, agg_league_season(fact_games, fact_pg), "agg_league_season")
-    write(engine, agg_team_season(tg), "agg_team_season")
-    write(engine, agg_player_season(fact_pg), "agg_player_season")
-    write(engine, agg_win_factors(fact_games), "agg_win_factors")
-    write(engine, agg_starter_bench(fact_pg), "agg_starter_bench")
+    partial = partial_seasons(fact_games)
+    if partial:
+        log.info("Season(s) still in progress in the data: %s (flagged is_complete_season = 0)", partial)
+    aggregates = {
+        "agg_league_season": agg_league_season(fact_games, fact_pg),
+        "agg_team_season": agg_team_season(tg),
+        "agg_player_season": agg_player_season(fact_pg),
+        "agg_win_factors": agg_win_factors(fact_games),
+        "agg_starter_bench": agg_starter_bench(fact_pg),
+    }
+    for name, df in aggregates.items():
+        df.insert(2, "is_complete_season", (~df["season"].isin(partial)).astype(int))
+        write(engine, df, name)
     create_indexes(engine)
     reconcile(engine, raw["games"], fact_games, raw["games_details"], fact_pg)
     log.info("Transform finished")

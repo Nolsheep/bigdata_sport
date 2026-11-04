@@ -38,7 +38,7 @@ python run_pipeline.py
 |---|---|---|---|
 | `dim_team` | team | yes (`teams`) | team names, arenas |
 | `fact_games` | game | yes (`games`) | game-level results, home/away, margin |
-| `fact_player_games` | player × game (~600k rows) | **no**, too big for Sheets | source for player/league aggregates |
+| `fact_player_games` | player × game (~560k rows) | **no**, too big for Sheets | source for player/league aggregates |
 | `agg_league_season` | season | yes | Q1 3-point trend, Q2 home advantage |
 | `agg_team_season` | team × season | yes | Q4 dominance, point differential |
 | `agg_player_season` | player × season (≥10 games) | yes | Q5 top scorers & efficiency |
@@ -154,8 +154,10 @@ SELECT * FROM audit.pipeline_runs ORDER BY started_at DESC;
 | Q4 | Scatter chart | `team_season` | `team_name` | X = `point_diff`, Y = `win_pct`, season drop-down filter |
 | Q5 | Table with heatmap / bar | `player_season` | `player_name`, `team_abbr` | `ppg`, `ts_pct`, `rpg`, `apg`; filter `qualified = 1`, sort by `ppg`, season filter |
 
-4. Add a season drop-down control and a text box showing `pipeline_info.last_refreshed_utc`.
-5. **Share → Manage access → Anyone with the link → Viewer**, and copy the link into the report.
+4. The Kaggle snapshot ends on 2022-12-22, so 2022-23 is a partial season. Every `agg_*` table has
+   `is_complete_season`; filter it to `1` on season-trend charts so the half season is not compared with full ones.
+5. Add a season drop-down control and a text box showing `pipeline_info.last_refreshed_utc`.
+6. **Share → Manage access → Anyone with the link → Viewer**, and copy the link into the report.
 
 Re-running `python run_pipeline.py` refreshes the Google Sheet; the dashboard picks up the new data automatically
 (Looker Studio caches for up to ~15 minutes; use **Refresh data** to force it).
