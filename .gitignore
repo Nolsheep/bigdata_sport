@@ -1,0 +1,17 @@
+# Secrets: never commit
+credentials.json
+*.json.key
+kaggle.json
+.env
+
+# Downloaded Kaggle data (large; re-downloaded by ingest.py)
+data/*
+!data/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+logs/
