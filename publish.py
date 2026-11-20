@@ -60,7 +60,9 @@ def upload(spreadsheet, title, df):
         ws.resize(rows=rows, cols=cols)
     except gspread.WorksheetNotFound:
         ws = spreadsheet.add_worksheet(title=title, rows=rows, cols=cols)
-    set_with_dataframe(ws, df, include_index=False, resize=True)
+    # string_escaping='full' stores text as text: otherwise Sheets turns season
+    # labels such as '2003-04' into dates (2003-04-01).
+    set_with_dataframe(ws, df, include_index=False, resize=True, string_escaping="full")
     return ws
 
 
