@@ -1,0 +1,17 @@
+# Secrets - never commit
+credentials.json
+*.credentials.json
+service_account*.json
+.env
+
+# Data
+data/
+*.csv
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
